@@ -7,21 +7,46 @@ import androidx.lifecycle.ViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.dio.soccernews.data.SoccerNewsApi;
 import me.dio.soccernews.domain.News;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NewsViewModel extends ViewModel {
 
-    private final MutableLiveData<List<News>> news;
+    private final MutableLiveData<List<News>> news = new MutableLiveData<>();
+    private final SoccerNewsApi api;
 
     public NewsViewModel() {
-        this.news = new MutableLiveData<>();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://flaviosabino.github.io/soccer-news-api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        List<News> news = new ArrayList<>();
-        news.add(new News("Timão Tem Desfalque Importante", "A tríplice coroa comemorada pelo time feminino do Corinthians em 2021 é apenas um combustível para a equipe buscar mais"));
-        news.add(new News("Timão Joga no Sábado", "A tríplice coroa comemorada pelo time feminino do Corinthians em 2021 é apenas um combustível para a equipe buscar mais"));
-        news.add(new News("mundial de clubes Feminino está Terminando", "A tríplice coroa comemorada pelo time feminino do Corinthians em 2021 é apenas um combustível para a equipe buscar mais"));
+        api = retrofit.create(SoccerNewsApi .class);
+        this.findNews();
 
-        this.news.setValue(news);
+    }
+
+    public void findNews() {
+        api.getNews().enqueue(new Callback<List<News>>() {
+            @Override
+            public void onResponse(Call<List<News>> call, Response<List<News>> response) {
+                if (response.isSuccessful()){
+                    news.setValue(response.body());
+                } else {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<News>> call, Throwable t) {
+
+            }
+        });
     }
 
     public LiveData<List<News>> getNews() {
